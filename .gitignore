@@ -16,6 +16,15 @@ pkg/
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# db-data
+db-data/
+
+# binaries
+front-end/frontApp
+broker-service/brokerApp
+logger-service/loggerServiceApp
+authentication-service/authApp
+
 # Configuration files for IDEs
 .vscode/
 .idea/
