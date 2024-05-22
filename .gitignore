@@ -23,6 +23,7 @@ db-data/
 front-end/frontApp
 broker-service/brokerApp
 logger-service/loggerServiceApp
+mail-service/mailApp
 authentication-service/authApp
 
 # Configuration files for IDEs
