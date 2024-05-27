@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"html/template"
+	"log"
 	"time"
 
 	"github.com/vanng822/go-premailer/premailer"
-
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
@@ -44,7 +44,7 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 		"message": msg.Data,
 	}
 
-	msg.Data = data
+	msg.DataMap = data
 
 	formattedMessage, err := m.buildHTMLMessage(msg)
 	if err != nil {
@@ -68,6 +68,7 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 
 	smtpClient, err := server.Connect()
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -87,11 +88,11 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 
 	err = email.Send(smtpClient)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	return nil
-
 }
 
 func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
@@ -103,7 +104,7 @@ func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 	}
 
 	var tpl bytes.Buffer
-	if err = t.ExecuteTemplate(&tpl, "body", msg.Data); err != nil {
+	if err = t.ExecuteTemplate(&tpl, "body", msg.DataMap); err != nil {
 		return "", err
 	}
 
@@ -114,6 +115,24 @@ func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 	}
 
 	return formattedMessage, nil
+}
+
+func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
+	templateToRender := "./templates/mail.plain.gohtml"
+
+	t, err := template.New("email-plain").ParseFiles(templateToRender)
+	if err != nil {
+		return "", err
+	}
+
+	var tpl bytes.Buffer
+	if err = t.ExecuteTemplate(&tpl, "body", msg.DataMap); err != nil {
+		return "", err
+	}
+
+	plainMessage := tpl.String()
+
+	return plainMessage, nil
 }
 
 func (m *Mail) inlineCSS(s string) (string, error) {
@@ -136,35 +155,14 @@ func (m *Mail) inlineCSS(s string) (string, error) {
 	return html, nil
 }
 
-func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
-	templateToRender := "./templates/mail.html.gohtml"
-
-	t, err := template.New("email-plain").ParseFiles(templateToRender)
-	if err != nil {
-		return "", err
-	}
-
-	var tpl bytes.Buffer
-	if err = t.ExecuteTemplate(&tpl, "body", msg.Data); err != nil {
-		return "", err
-	}
-
-	plainMessage := tpl.String()
-
-	return plainMessage, nil
-}
-
 func (m *Mail) getEncryption(s string) mail.Encryption {
 	switch s {
 	case "tls":
 		return mail.EncryptionSTARTTLS
-
 	case "ssl":
 		return mail.EncryptionSSLTLS
-
 	case "none", "":
 		return mail.EncryptionNone
-
 	default:
 		return mail.EncryptionSTARTTLS
 	}
