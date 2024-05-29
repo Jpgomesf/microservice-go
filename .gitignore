@@ -23,6 +23,7 @@ db-data/
 front-end/frontApp
 broker-service/brokerApp
 logger-service/loggerServiceApp
+listener-service/listenerApp
 mail-service/mailApp
 authentication-service/authApp
 
