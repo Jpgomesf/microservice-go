@@ -1,6 +1,7 @@
 package main
 
 import (
+	"broker/event"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -184,4 +185,22 @@ func (app *Config) sendMail(w http.ResponseWriter, msg MailPayload) {
 	payload.Message = "Message sent to " + msg.To
 
 	app.writeJSON(w, http.StatusAccepted, payload)
+// pushToQueue pushes a message into RabbitMQ
+func (app *Config) pushToQueue(name, msg string) error {
+	emitter, err := event.NewEventEmitter(app.Rabbit)
+	if err != nil {
+		return err
+	}
+
+	payload := LogPayload{
+		Name: name,
+		Data: msg,
+	}
+
+	j, _ := json.MarshalIndent(&payload, "", "\t")
+	err = emitter.Push(string(j), "log.INFO")
+	if err != nil {
+		return err
+	}
+	return nil
 }
